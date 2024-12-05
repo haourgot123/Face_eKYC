@@ -1,0 +1,9 @@
+yolo_face:
+    weight_path : 'weights/yolov8n-face.onnx'
+    conf_thres: 0.4
+    iou_thres: 0.6
+
+dataset:
+    root_path :  'dataset'
+    real_path : 'dataset/real-face'
+    fake_path : 'dataset/fake-face'

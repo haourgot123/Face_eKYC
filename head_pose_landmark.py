@@ -10,15 +10,37 @@ mp_drawing = mp.solutions.drawing_ultils
 
 
 class PoseDetectionMediapipe:
+    '''
+    Xác định góc quay của khuôn mặt sử dụng thư viện mediapipe.
+    '''
     def __init__(self,min_detection_confidence = 0.5, min_tracking_confidence = 0.5):
         self.face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence = min_detection_confidence, min_tracking_confidence = min_tracking_confidence)
         self.drawing_spec = mp_drawing.DrawingSpec(thickness = 1, circle_radius = 1)
     def _process(self,img):
+        '''
+        Phát hiện các landmarks trên khuôn mặt
+        Args: img - Ảnh đầu vào
+        Return: result - Kết quả chứa các landmarks
+        '''
         img.flags.writeable = False
         result = self.face_mesh.process(img)
         img.flags.writeable = True
         return result
     def _detect_pose(self, img):
+        '''
+        Phát hiện các góc quay của khuôn mặt, bao gồm quay lên,
+        quay xuống, quay trái, quay phải.
+        Args: img - Ảnh đầu vào
+        Returns:
+        pose_direction - Góc quay mặt
+        nose_3d - Vector 3d tại toạ độ mũi
+        nose_2d - Vector 2d tại toạ độ mũi
+        rot_vec - Vector quay
+        trans_vec - Vetor transport
+        cam_matrix - Ma trận camera
+        dist_matrix - Ma trận khoảng cách 
+        coordinates  - Giá trị thể hiện các trục quay.
+        '''
         img = cv2.cvtColor(cv2.flip(img, 1), cv2.COLOR_BGR2RGB)
         result = self._process(img)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -82,6 +104,9 @@ class PoseDetectionMediapipe:
 
         return pose_direction, nose_3d, nose_2d, rot_vec, trans_vec, cam_matrix, dist_matrix, coordinates
     def drawing(self, img, pose_direction, nose_3d, nose_2d, rot_vec, trans_vec, cam_matrix, dist_matrix, coordinates):
+        '''
+        Hàm này dùng để vẽ và hiển thị các góc quay lên camera
+        '''
         x, y, z = coordinates
         text = pose_direction[-1]
         # Hiển thị hướng trên mũi
