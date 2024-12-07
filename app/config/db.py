@@ -9,3 +9,4 @@ cluster = MongoClient(uri)
 
 db = cluster['face_ekyc']
 collection = db['users']
+collection_card = db['identify_card']

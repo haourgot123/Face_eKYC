@@ -3,13 +3,13 @@ from fastapi import APIRouter, status,Response
 from passlib.hash import sha256_crypt
 from starlette.status import HTTP_204_NO_CONTENT
 
-from models.user import User
-from config.db import collection
-from schemas.schemas import user_entity, users_entity
+from models.user import User, Card
+from config.db import collection, collection_card
+from schemas.schemas import user_entity, users_entity, identify_card
 
 user = APIRouter()
 
-@user.post('/login')
+@user.post('/login', tags = ['users'])
 async def login(user: User):
     user = dict(user)
     res = collection.find_one({'user_name': user['user_name']})
@@ -18,7 +18,7 @@ async def login(user: User):
     else:
         return sha256_crypt.verify(user['password'], res['password'])
 
-@user.post('/signup')
+@user.post('/signup', tags = ['users'])
 async def create_user(user: User):
     new_user = dict(user)
     new_user["password"] = sha256_crypt.encrypt(new_user["password"])
@@ -32,28 +32,21 @@ async def create_user(user: User):
     return False if user is None else True
 
 
-
-@user.get('/users', response_model = list[User], tags = ['users'])
-async def find_all_user():
-    return users_entity(collection.find())
-
+@user.get('/cards/{user_name}', response_model = Card,  tags = ['cards'])
+async def get_card_information(user_name: str):
+    return identify_card(collection_card.find_one({'user_name': user_name}))
 
 
-@user.put('/users/{id}', response_model = User, tags =['users'])
-async def update_password(id: str, user: User):
-    user = dict(user)
-    del user['id']
-    del user['user_name']
-    collection.find_one_and_update(
-        {'_id' : ObjectId(id)},
-        {'$set' : user}
-    )
-    return user_entity(collection.find_one({"_id": ObjectId(id)}))
+@user.post('/cards', tags = ['cards'])
+async def register_card(card: Card):
+    new_card = dict(card)
+    del new_card['id']
+    check_cccd = collection_card.find_one({'so_cccd': new_card['so_cccd']})
+    if check_cccd:
+        return str('existed')
+    id = collection_card.insert_one(new_card).inserted_id
+    card = collection_card.find_one({'id': id})
+    
+    return False if card is None else True
 
 
-@user.delete("/users/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
-async def delete_user(id: str):
-    collection.find_one_and_delete({
-        "_id": ObjectId(id)
-    })
-    return Response(status_code=HTTP_204_NO_CONTENT)

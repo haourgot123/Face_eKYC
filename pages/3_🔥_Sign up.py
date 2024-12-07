@@ -25,5 +25,10 @@ def signup():
             st.error('Không thể tạo tài khoản. Vui lòng thử lại sau')
         elif res.text == 'true':
             st.success('Tạo tài khoản thành công.')
+if 'login_state' not in st.session_state:
+    st.session_state['login_state'] = 'false'
 
-signup()
+if st.session_state['login_state'] == 'false':
+    signup()
+else:
+    st.title('🎯 Vui lòng Đăng Xuất trước khi Đăng Kí')
